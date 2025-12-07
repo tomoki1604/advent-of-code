@@ -1,6 +1,6 @@
 import fs from 'fs';
 const INPUT = fs
-  .readFileSync('input.txt', 'utf-8')
+  .readFileSync('./inputs/input.txt', 'utf-8')
   .split('\n')
   .filter((line) => line.trim() !== '');
 
