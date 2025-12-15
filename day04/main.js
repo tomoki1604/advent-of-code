@@ -1,59 +1,62 @@
-import { input } from './input.js';
+import fs from 'fs';
 
-const testInput = [
-  '..@@.@@@@.',
-  '@@@.@.@.@@',
-  '@@@@@.@.@@',
-  '@.@@@@..@.',
-  '@@.@@@@.@@',
-  '.@@@@@@@.@',
-  '.@.@.@.@@@',
-  '@.@@@.@@@@',
-  '.@@@@@@@@.',
-  '@.@.@@@.@.',
-];
+const INPUT_FILES = {
+  input: './inputs/input.txt',
+  test: './inputs/test-input.txt',
+};
 
 const PART = 2; // 1 for Part One, 2 for Part Two
-const INPUT = input; // testInput or input (actual puzzle input)
+const rollsGrid = readLines(INPUT_FILES.input);
 
-let totalRolls = 0;
+const totalRolls = countTotalRolls(rollsGrid);
+console.log('totalRolls = ', totalRolls);
 
-function countTotalRolls(input) {
-  const newInput = [];
+/* HELPERS */
+
+function readLines(filePath) {
+  return fs.readFileSync(filePath, 'utf-8').trim().split('\n');
+}
+
+function countTotalRolls(grid) {
+  const newGrid = [];
   let accessibleRolls = 0;
 
-  for (let i = 0; i < input.length; i++) {
-    newInput[i] = '';
-    for (let j = 0; j < input.length; j++) {
-      if (input[i][j] === '@' && isAccessible([i, j], input)) {
+  for (let row = 0; row < grid.length; row++) {
+    newGrid[row] = '';
+    for (let column = 0; column < grid[row].length; column++) {
+      if (isRollAccessible([row, column], grid)) {
         accessibleRolls++;
-        newInput[i] += 'x';
+        newGrid[row] += 'x';
       } else {
-        newInput[i] += input[i][j];
+        newGrid[row] += grid[row][column];
       }
     }
   }
 
-  if (accessibleRolls === 0) return; // stop
+  if (accessibleRolls === 0) return 0; // stop recursion
 
-  totalRolls += accessibleRolls;
-  if (PART !== 1) countTotalRolls(newInput);
+  const nextRolls = PART !== 1 ? countTotalRolls(newGrid) : 0;
+
+  return accessibleRolls + nextRolls;
 }
 
-function isAccessible([row, column], input) {
-  let counter = 0;
+function isRollAccessible([row, column], grid) {
+  // check is roll (@) even present
+  if (grid[row][column] !== '@') return false;
+
+  // count neighbors of a roll (@)
+  return countNeighbors([row, column], grid) <= 4;
+}
+
+function countNeighbors([row, column], grid, target = '@') {
+  let count = 0;
 
   for (let i = -1; i <= 1; i++) {
-    if (input[row + i] === undefined) continue;
+    if (!grid[row + i]) continue;
     for (let j = -1; j <= 1; j++) {
-      if (input[row + i][column + j] === '@') counter++;
+      if (grid[row + i][column + j] === target) count++;
     }
   }
 
-  return counter <= 4 ? true : false;
+  return count;
 }
-
-console.time();
-countTotalRolls(INPUT);
-console.log('totalRolls = ', totalRolls);
-console.timeEnd();
