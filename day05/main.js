@@ -1,29 +1,59 @@
-import { input } from './input.js';
+import fs from 'fs';
 
-const testInput = ['3-5\n10-14\n16-20\n12-18', '1\n5\n8\n11\n17\n32\n'];
-const INPUT = input; // testInput or input (actual puzzle input)
+const INPUT_FILES = {
+  input: './inputs/input.txt',
+  test: './inputs/test-input.txt',
+};
+const { ids, ranges } = parseInput(INPUT_FILES.input);
 
-// Prepping the input here
-let freshIdsRanges = INPUT[0]
-  .split('\n')
-  .map((range) => [
-    parseInt(range.split('-')[0]),
-    parseInt(range.split('-')[1]),
-  ]); // -> [[3-5], [10-14], ...]
-let idsToCheck = INPUT[1].split('\n').map((n) => parseInt(n)); // -> [1, 5, ...]
+const partOne = countIdsInRanges(ids, ranges);
+const optimizedRanges = optimizeRanges(ranges);
+const partTwo = countTotalRangeSize(optimizedRanges);
 
-let freshIdsCounter = 0;
+console.log('New optimized ranges:', optimizedRanges);
+console.log('Part One:', partOne);
+console.log('Part Two:', partTwo);
 
-for (let id of idsToCheck) {
-  id = parseInt(id);
-  for (let range of freshIdsRanges) {
-    const [left, right] = range;
+/* HELPERS */
 
-    if (left <= id && id <= right) {
-      freshIdsCounter++;
-      break;
+function parseInput(filePath) {
+  const content = fs.readFileSync(filePath, 'utf-8').trim();
+  const [rangesBlock, idsBlock] = content.split(/\r?\n\r?\n/);
+
+  const ranges = rangesBlock
+    .split('\n')
+    .map((line) => line.split('-').map(Number));
+
+  const ids = idsBlock.split('\n').map(Number);
+
+  return { ids, ranges };
+}
+
+function countTotalRangeSize(ranges) {
+  let total = 0;
+
+  for (const [start, end] of ranges) {
+    total += end - start + 1;
+  }
+
+  return total;
+}
+
+function countIdsInRanges(ids, ranges) {
+  let counter = 0;
+
+  for (const id of ids) {
+    for (const range of ranges) {
+      const [left, right] = range;
+
+      if (left <= id && id <= right) {
+        counter++;
+        break;
+      }
     }
   }
+
+  return counter;
 }
 
 function optimizeRanges(ranges) {
@@ -55,13 +85,3 @@ function optimizeRanges(ranges) {
 
   return optimizeRanges(newRanges);
 }
-
-let totalFreshIds = 0;
-for (let i of optimizeRanges(freshIdsRanges)) {
-  totalFreshIds += i[1] - i[0] + 1;
-}
-
-// Solution output
-console.log(optimizeRanges(freshIdsRanges));
-console.log(freshIdsCounter);
-console.log(totalFreshIds);
